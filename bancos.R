@@ -991,3 +991,45 @@ rbot <- rbind(
 
 write.xlsx(rbot,"rbot.xlsx")
 
+
+rbot <- rbot  %>% filter(evento!= "Semana Cultural")
+rbot <- rbot %>% mutate(id =paste0("rbot-",rownames(rbot)),nome_pesquisador=NULL,data_pesquisa=NULL)
+rbot <- rbot %>% mutate(resid_turista = case_when(resid_turista == "Belo Horizonte"~"Residente",
+                                  resid_turista == "Cidade da região metropolitana de BH/RMBH"~"Excursionista",
+                                  resid_turista == "Outro país" | resid_turista == "Outra cidade"~"Turista",
+                                  is.na(resid_turista)== TRUE~"Não responderam",
+                                  TRUE~resid_turista))
+
+
+rbot <- rbot %>% mutate(idade2=as.numeric(gsub(" anos|anos|Anos| Anos| anos de idade","",idade)),
+                        idade2 = case_when(idade2 < 17 ~ "eliminar",
+                                           idade2>=17&idade2<=20~"17 a 20 anos",
+                                           idade2>=21&idade2<=40~"21 a 40 anos",
+                                           idade2>=41&idade2<=50~"41 a 50 anos",
+                                           idade2>=51&idade<=60~"51 a 60 anos",
+                                           idade2>60~"Acima de 60 anos", TRUE~NA),
+                        idade=case_when(is.na(idade2)==TRUE~idade,
+                                        TRUE~idade2),
+                        idade=ifelse(idade%in%c("Não responderam","Filipe","Carnaíba","Água Branca pb",
+                                                   "Princesa Isabel","eliminar"),NA,idade),
+                        idade2=NULL, 
+                        idade=case_when(idade== "60.0"|idade == "60 anos"~"51 a 60 anos",
+                                        idade == "60+"~"Acima de 60 anos", TRUE~ idade))
+  
+d <- data.frame(estado = unique(rbot$estado),
+                estado_new= c(NA, "Minas Gerais", "São Paulo", "Rio de Janeiro", "Ceará",
+                              "Bahia", "Distrito Federal", "Paraná", "Paraíba", "Pernambuco",
+                              "Maranhão", "Rio Grande do Norte", "Distrito Federal",
+                              "Rondônia", "Piauí", "Alagoas", "Santa Catarina", "Goiás",
+                              "Sergipe", "Outro país", "Goiás", "Pará", "Rondônia", "Distrito Federal",
+                              NA, "Minas Gerais", "São Paulo", "Tocantins", "Mato Grosso", "Maranhão",
+                              "Santa Catarina", "Rio de Janeiro", "Amazonas", "Outro país", "Amazonas", "Amazonas",
+                              NA, "Amazonas", "Amazonas", "Amazonas", "Amazonas",
+                              "Tocantins", "Pará", NA, "Pernambuco", "Roraima",
+                              "Mato Grosso do Sul", "São Paulo", "Minas Gerais",
+                              "Outro país", "Mato Grosso", "Rio de Janeiro", "Outro país",
+                              "Acre", "Outro país", "Pernambuco", "Outro país",
+                              "Outro país", "Rio Grande do Sul", "Mato Grosso", "Outro país",
+                              "Mato Grosso do Sul", "Espírito Santo", "Distrito Federal"))
+rbot <- rbot %>% left_join(d,by = "estado") %>% mutate(estado = estado_new,
+                                                       estado_new = NULL)

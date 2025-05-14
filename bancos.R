@@ -98,7 +98,7 @@ carnaval <- read_xlsx("Perfil do Visitante (CARNAVAL RN) - Rbot (respostas).xlsx
 
 martires <- read_xlsx("Perfil do Visitante (Mártires) - RBOT (respostas).xlsx")
 
-
+#teste
 
 passira <- passira %>% 
   transmute(id = `Carimbo de data/hora`,

@@ -3,6 +3,7 @@ if(require(here) == F) install.packages("here"); require(here)
 if(require(readxl) == F) install.packages("readxl"); require(readxl)
 if(require(openxlsx) == F) install.packages("openxlsx"); require(openxlsx)
 if(require(scales) == F) install.packages("scales"); require(scales)
+if(require(splitstackshape) == F) install.packages("splitstackshape"); require(splitstackshape)
 setwd(here("Bancos"))
 
 
@@ -1073,7 +1074,7 @@ rbot <- rbot %>% mutate(cidade = case_when(cidade == "-"~NA,
                                            cidade=="Natal rn"~"Natal",
                                            cidade=="Praia de Caraúbas, Maxaranguape"~"Maxaranguape",
                                            cidade=="Touros/RN"~"Touros",
-                                           cidade=="Natal RN"~"Natal RN",
+                                           cidade=="Natal RN"~"Natal",
                                            cidade=="Frecheirinha ce"~"Freceirinha",
                                            cidade=="Praia de Jacumã - Ceará Mirim/RN"~"Ceará Mirim",
                                            cidade=="Tibau do sul/RN"~"Tibau do sul",
@@ -1095,13 +1096,73 @@ rbot <- rbot %>% mutate(cidade = case_when(cidade == "-"~NA,
                                            cidade=="Poço de pedra"~"Poço de Pedra",
                                            cidade=="São gonçalo"~"São Gonçalo",
                                            cidade=="São Gonçalo do ama"~"São Gonçalo do Amarante",
+                                           cidade=="Cidade Natal"~"Natal",
                                            T~cidade))
 
 q <- data.frame(qtd_noite = unique(rbot$qtd_noite),
-                qtd_noite_new= c(NA,"1","15","2","7","4","3","5","15","10","10","30","30",NA,"20",NA,"15","2",
-                                 "20","4","30","8","1","14","18",NA,"5","2","2",NA,"9","30",NA,"18","18","15","12","25","8","14",NA,"7","5","3",
-                                 "21","12","18","360","90","18",NA,NA,NA,NA,NA,"16",NA,NA,NA,"21",NA,NA,"7","11","16",NA,"8",NA,NA,NA,"13",NA,NA,NA,
-                                 "14","7","19","6",NA,"22","3",NA,NA,"3","1","7",NA,NA,NA,NA,NA,NA,"4",NA,NA,NA,"2",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"0",
-                                 NA,NA,"8","10",NA,NA,"7",NA,NA,NA,NA,"30",NA,"17",NA,NA,"0",NA,NA,"6",NA,NA,NA,NA,NA,NA,"1",NA,NA,NA,"2",NA,"4",NA,NA,
-                                 NA,NA,NA,NA,NA,NA,NA,NA,"6",NA,"7",NA,NA,NA,NA,"15",NA,NA,NA))
+                qtd_noite_new= c(NA,1,15,2,7,4,3,5,15,10,10,30,30,2,20,1,15,2,
+                                 20,4,30,8,1,14,18,1,5,2,2,1,9,30,2,18,18,15,12,25,8,14,1,7,5,3,
+                                 21,12,18,NA,90,18,NA,NA,NA,NA,NA,16,NA,NA,NA,21,3,NA,7,11,16,NA,8,NA,NA,4,13,NA,NA,NA,
+                                 14,7,19,6,NA,22,3,NA,NA,3,1,7,NA,NA,NA,NA,NA,NA,NA,4,NA,NA,NA,2,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,
+                                 NA,8,10,NA,NA,7,NA,NA,NA,NA,30,NA,NA,17,NA,NA,NA,10,NA,6,NA,NA,NA,NA,NA,NA,1,NA,NA,NA,2,NA,NA,3,
+                                 4,NA,NA,4,NA,3,NA,NA,NA,6,NA,7,NA,NA,NA,NA,15,NA,NA,NA))
+rbot <- rbot %>% left_join(q, by = "qtd_noite") %>% mutate(qtd_noite=qtd_noite_new,qtd_noite_new=NULL)                                 
+
+rbot <- rbot %>% mutate(hospedagem=tolower(hospedagem))
+
+rbot <- rbot %>% mutate(hospedagem = case_when(
+  hospedagem%in%c("hotel ou flat", "hotel/flat","pousada","albergue/hostel", "hostel")~"Hotel",
+  hospedagem%in%c("imóvel alugado (inclui airbnb)", "aluquel de casa", "casa alugada", "alugada", "imóvel (inclui airbnb)", "aluguel", "minha casa alugada","imóvel impróprio")~"Imóvel Alugado (inclui Airbnb)",
+  hospedagem%in%c("casa de amigos e parentes", "casa de amigos ou parentes", "imóvel de amigo", "casa de amigos")~"Casa de Amigos",
+  hospedagem=="camping"~"Camping",
+  hospedagem=="imóvel próprio"~"Imóvel Próprio",
+  TRUE~NA
+  ))
+rbot <- rbot %>% mutate(transporte = case_when(
+  transporte%in%c("Ônibus rodoviário", "Ônibus rodoviário /Regular", "Ônibus rodoviário / Regular", "Ônibus rodoviário/Regular")~"Ônibus Rodoviário",
+  transporte%in%c("APP carro (Uber, 99, In driver, Blablacar)", "APP carro (Uber, 99, In Drive, Blablacar", "APP carro (Uber, 99, In Drive, Blablacar)", "APP carro (uber, 99, In drive, Blablacar)", "Uber", "APP Carro e APP Moto")~"APP Carro",
+  transporte%in%c("APP ônibus (Buser, Click Bus)", "APP ônibus (Buser/Click Bus)")~"APP Ônibus",
+  transporte%in%c("Ônibus fretado", "Ônibus fretado/Excursão", "Ônibus fretado / Excursão", "Ônibus da Prefeitura Três Ranchos", "Ônibus escolar da Prefeitura Três Ranchos")~"Ônibus Fretado/Prefeitura",
+  transporte=="Moto"~"Moto",
+  transporte=="Barco"~"Barco",
+  transporte=="Avião"~"Avião",
+  transporte=="Carro"~"Carro",
+  transporte%in%c("Apé", "A pé", "Andando", "a pé", "caminhando", "Bicicleta", "Caminhada", "Caminhando", "Pés", "A pe", "A Pé", "De pé", "Moro na frente de onde tem festa", "Não foi utilizado", "Nao vou")~"A Pé/Sem Transporte",
+  TRUE~NA
+))
+
+rbot <- rbot %>% mutate(acesso=case_when(
+  str_detect(acesso,",")== TRUE~NA,
+  TRUE~acesso
+),
+acesso=gsub(" - ótimo","",acesso)
+) %>% mutate(acesso=as.numeric(acesso),acesso=ifelse(acesso==11,NA,acesso))
+
+rbot <- rbot %>% mutate(rodovia=case_when(
+  str_detect(rodovia,",")== TRUE~NA,
+  TRUE~rodovia
+),
+rodovia=gsub(" - ótimo","",rodovia)
+) %>% mutate(rodovia=as.numeric(rodovia),rodovia=ifelse(rodovia==11,NA,rodovia))
+
+rbot <- rbot %>% mutate(hosp_rank=case_when(
+  str_detect(hosp_rank,",")== TRUE~NA,
+  TRUE~hosp_rank
+),
+hosp_rank=gsub(" - ótimo","",hosp_rank)
+) %>% mutate(hosp_rank=as.numeric(hosp_rank),hosp_rank=ifelse(hosp_rank==11,NA,hosp_rank))
+
+rbot <- rbot %>% mutate(gastronomia=case_when(
+  str_detect(gastronomia,",")== TRUE~NA,
+  TRUE~gastronomia
+),
+gastronomia=gsub(" - ótimo","",gastronomia)
+) %>% mutate(gastronomia=as.numeric(gastronomia),gastronomia=ifelse(gastronomia==11,NA,gastronomia))
+
+rbot <- rbot %>% mutate(limpeza=case_when(
+  str_detect(limpeza,",")== TRUE~NA,
+  TRUE~limpeza
+),
+limpeza=gsub(" - ótimo","",limpeza)
+) %>% mutate(limpeza=as.numeric(limpeza),limpeza=ifelse(limpeza==11,NA,limpeza))
 

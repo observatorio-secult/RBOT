@@ -98,7 +98,7 @@ carnaval <- read_xlsx("Perfil do Visitante (CARNAVAL RN) - Rbot (respostas).xlsx
 
 martires <- read_xlsx("Perfil do Visitante (Mártires) - RBOT (respostas).xlsx")
 
-#teste
+
 
 passira <- passira %>% 
   transmute(id = `Carimbo de data/hora`,
@@ -1031,5 +1031,77 @@ d <- data.frame(estado = unique(rbot$estado),
                               "Acre", "Outro país", "Pernambuco", "Outro país",
                               "Outro país", "Rio Grande do Sul", "Mato Grosso", "Outro país",
                               "Mato Grosso do Sul", "Espírito Santo", "Distrito Federal"))
-rbot <- rbot %>% left_join(d,by = "estado") %>% mutate(estado = estado_new,
+rbot <- rbot %>% mutate(pais = ifelse(estado%in%c("Árabe - Líbano","Portugal","Itália","Merida/México","Roma","Venezuela"),estado,pais)) %>% 
+  left_join(d,by = "estado") %>% mutate(estado = estado_new,
                                                        estado_new = NULL)
+rbot <- rbot %>% mutate(estado = case_when(estado == "Outro país"~NA, TRUE ~ estado))
+
+rbot <- rbot %>% mutate(pais = case_when(pais == "Jaboatão dos outros" ~ NA,
+                                         pais == "Jaboatão dos Guararapes"~NA,
+                                         pais == "Jurú"~NA,
+                                         pais == "Princesa Isabel"~ NA,
+                                         pais == "Nr"~ NA,
+                                         pais == "Ns"~ NA,
+                                         pais == "Não"~NA,
+                                         pais == "Nao sei"~NA,
+                                         pais =="Merida/México"~ "México",
+                                         pais == "Roma"~"Itália",
+                                         pais == "Árabe - Líbano"~ "Libano",
+                                         TRUE ~ pais))
+
+rbot <- rbot %>% mutate(pernoite = case_when(pernoite == "Sim (pular para a questão 7)"~"Sim",
+                                             pernoite == "Sim (pular para a 7)"~"Sim",
+                                             pernoite%in%c("Não vai pernoitar","Não (pular para a questão 8)","Não vai pernoitar (pular para a 9)","Vou pernoitar em outra cidade.",
+                                                           "Não vai pernoitar ","Não (pular para a questão 9)","Não vai pernoitar (pular para 8)")~"Não",
+                                             TRUE~NA))
+
+rbot <- rbot %>% mutate(cidade = case_when(cidade == "-"~NA,
+                                           cidade == "Ns"~NA,
+                                           cidade == "Não quis informar"~NA,
+                                           cidade == "Não se aplica"~NA,
+                                           cidade == "Não se aplica (Morador/turista cidadão)"~NA,
+                                           cidade%in%c(".","casa","Não se aplica (Pernoite em Ouvidor)","3.0","SGA","Não tem","Sim","Não responderam","Não","Nr","Não quis responder",
+                                                       "4.0","Nao sei")~NA,
+                                           cidade=="Carnaiba PE"~"Carnaiba",
+                                           cidade=="Limoeiro-Pe"~"Limoeiro",
+                                           cidade=="Balnerio Camboriú"~"Balneário",
+                                           cidade=="Em Carnaiba PE, na casa de meu tio"~"Carnaíba",
+                                           cidade=="Sou de Natal rn, mas vou para Fernando Pedroza"~"Fernando Pedroza",
+                                           cidade=="Natap"~"Natal",
+                                           cidade=="Natal1"~"Natal",
+                                           cidade=="Alminio afonso"~"Almino Afonso",
+                                           cidade=="Natal rn"~"Natal",
+                                           cidade=="Praia de Caraúbas, Maxaranguape"~"Maxaranguape",
+                                           cidade=="Touros/RN"~"Touros",
+                                           cidade=="Natal RN"~"Natal RN",
+                                           cidade=="Frecheirinha ce"~"Freceirinha",
+                                           cidade=="Praia de Jacumã - Ceará Mirim/RN"~"Ceará Mirim",
+                                           cidade=="Tibau do sul/RN"~"Tibau do sul",
+                                           cidade=="Extremoz (residente)"~"Extremoz",
+                                           cidade=="Parnamirim- Pirangi"~"Parnamirim",
+                                           cidade=="Campina Grande - PB"~"Campina Grande",
+                                           cidade=="Natal RN"~"Natal",
+                                           cidade=="Rio Grande Do norte natal"~"Natal",
+                                           cidade=="parnamirim"~"Parnamirim",
+                                           cidade=="Caicó e Macau"~"Caicó",
+                                           cidade=="Pirangi- Parnamirim"~"Parnamirim",
+                                           cidade=="Zumbi, Rio do Fogo"~"Rio do Fogo",
+                                           cidade=="Caruaru, Recife"~"Caruaru",
+                                           cidade=="Tavares Paraíba"~"Tavares",
+                                           cidade=="Ceará Mirim"~"Ceará-Mirim",
+                                           cidade=="Muriu"~"Muriú",
+                                           cidade=="natal"~"Natal",
+                                           cidade=="PARAZINHO"~"Parazinho",
+                                           cidade=="Poço de pedra"~"Poço de Pedra",
+                                           cidade=="São gonçalo"~"São Gonçalo",
+                                           cidade=="São Gonçalo do ama"~"São Gonçalo do Amarante",
+                                           T~cidade))
+
+q <- data.frame(qtd_noite = unique(rbot$qtd_noite),
+                qtd_noite_new= c(NA,"1","15","2","7","4","3","5","15","10","10","30","30",NA,"20",NA,"15","2",
+                                 "20","4","30","8","1","14","18",NA,"5","2","2",NA,"9","30",NA,"18","18","15","12","25","8","14",NA,"7","5","3",
+                                 "21","12","18","360","90","18",NA,NA,NA,NA,NA,"16",NA,NA,NA,"21",NA,NA,"7","11","16",NA,"8",NA,NA,NA,"13",NA,NA,NA,
+                                 "14","7","19","6",NA,"22","3",NA,NA,"3","1","7",NA,NA,NA,NA,NA,NA,"4",NA,NA,NA,"2",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"0",
+                                 NA,NA,"8","10",NA,NA,"7",NA,NA,NA,NA,"30",NA,"17",NA,NA,"0",NA,NA,"6",NA,NA,NA,NA,NA,NA,"1",NA,NA,NA,"2",NA,"4",NA,NA,
+                                 NA,NA,NA,NA,NA,NA,NA,NA,"6",NA,"7",NA,NA,NA,NA,"15",NA,NA,NA))
+

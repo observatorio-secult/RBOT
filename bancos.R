@@ -1166,3 +1166,40 @@ rbot <- rbot %>% mutate(limpeza=case_when(
 limpeza=gsub(" - ótimo","",limpeza)
 ) %>% mutate(limpeza=as.numeric(limpeza),limpeza=ifelse(limpeza==11,NA,limpeza))
 
+rbot <- rbot %>% mutate(oficina=case_when(
+  oficina == "Não Responderam"~NA,
+  oficina == "Não."~"Não",
+  oficina == "Sim."~"Sim",
+  TRUE~oficina
+))
+rbot <- rbot %>% mutate(interacao=case_when(
+  interacao == "Não Responderam"~NA,
+  interacao == "Não."~"Não",
+  interacao == "Sim."~"Sim",
+  interacao == "Não responderam"~NA,
+  TRUE~interacao
+))
+
+
+rbot <- rbot %>% mutate(acompanhante=case_when(
+  acompanhante%in%c("Casal sem filhos/ namorado(a)", "Casal sem filhos / namorado(a)", "Casal sem filhos/namorado(a)")~"Casal",
+  acompanhante%in%c("Grupo de amigos", "Amiga de trabalho", "Amiga", "Colega", "Amigos", "Vizinhos")~"Grupo de Amigos",
+  acompanhante%in%c("Grupo Familiar", "Grupo familiar", "Família", "Mãe e filho", "Mãe e filha", "Pai e filha", "Mãe com filha", "irmã","Casal com filhos", "Vizinha", "Família, parceiro e amigos","Tio e namorado","Casal com filhos")~"Família",
+  acompanhante%in%c("Colegas de trabalho", "Colega de trabalho", "Equipe de trabalho")~"Colegas de Trabalho",
+  TRUE~NA
+))
+
+
+
+a <- rbot %>% select(id,nome_rede) %>% cSplit("nome_rede",sep = ",",direction = "long") %>% 
+  mutate(nome_rede_tratado = case_when(
+    str_detect(nome_rede,pattern = regex("whatsapp",ignore_case = TRUE))==TRUE~"WhatsApp",
+    str_detect(nome_rede,pattern = regex("TikTok",ignore_case = TRUE))==TRUE~"TikTok",
+    str_detect(nome_rede,pattern = regex("twitter",ignore_case = TRUE))==TRUE~"X",
+    str_detect(nome_rede,pattern = regex("instagram",ignore_case = TRUE))==TRUE~"Instagram",
+    str_detect(nome_rede,pattern = regex("facebook",ignore_case = TRUE))==TRUE~"Facebook",
+    str_detect(nome_rede,pattern = regex("site",ignore_case = TRUE))==TRUE~"Sites",
+    TRUE~"Outros",
+  )) %>% mutate(nome_rede=NULL) %>%  unique() %>% group_by(id) %>% summarise(nome_rede_tratado=paste0(nome_rede_tratado,collapse = ";"))
+rbot <- rbot %>% left_join(a, by = "id") %>% mutate(nome_rede=nome_rede_tratado,nome_rede_tratado = NULL)
+

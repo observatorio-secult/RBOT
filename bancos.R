@@ -1203,3 +1203,24 @@ a <- rbot %>% select(id,nome_rede) %>% cSplit("nome_rede",sep = ",",direction = 
   )) %>% mutate(nome_rede=NULL) %>%  unique() %>% group_by(id) %>% summarise(nome_rede_tratado=paste0(nome_rede_tratado,collapse = ";"))
 rbot <- rbot %>% left_join(a, by = "id") %>% mutate(nome_rede=nome_rede_tratado,nome_rede_tratado = NULL)
 
+alimento <- rbot %>% select(id, gasto_alimento) %>% mutate(gasto_num= as.numeric(gsub("[^0-9.]","",gasto_alimento)),
+                                                           gasto_num = case_when(
+                                                             is.na(gasto_num)~NA,
+                                                             gasto_num >= 10000~NA,
+                                                             gasto_num == 0 | gasto_num == 5001~NA,
+                                                             gasto_num >= 10 & gasto_num <=50~"Entre R$10,00 a R$50,00",
+                                                             gasto_num >= 51 & gasto_num <=100~"Entre R$51,00 a R$100,00",
+                                                             gasto_num >= 101 & gasto_num <=200~"Entre R$101,00 a R$200,00",
+                                                             gasto_num >= 201 & gasto_num <=300~"Entre R$201,00 a R$300,00",
+                                                             gasto_num >= 301 & gasto_num <=400~"Entre R$301,00 a R$400,00",
+                                                             gasto_num >= 401 & gasto_num <=500~"Entre R$401,00 a R$500,00",
+                                                             gasto_num > 500~"Acima de R$501,00",
+                                                             gasto_alimento == "80 reais a 100 reais"~"Entre R$51,00 a R$100,00",
+                                                             gasto_alimento == "180 á 200 reais"~"Entre R$101,00 a R$200,00",
+                                                             gasto_alimento%in%c("200 a 300 reais", "200 a 500 reais")~"Entre R$201,00 a R$300,00",
+                                                             gasto_alimento%in%c("300 á 500 reais", "300 á 400 reais", "250 á 400 reais")~"Entre R$301,00 a R$400,00",
+                                                             gasto_alimento%in%c("400 a 500 reais", "400 á 500 reais", "400/500 reais", "400 á500 reais")~"Entre R$401,00 a R$500,00",
+                                                             gasto_alimento%in%c("500 á 600 reais", "600 á 800 reais", "500 á 800 reais", "500 á 1000 reais")~"Acima de R$501,00",
+                                                             TRUE~NA
+                                                           ))
+

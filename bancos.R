@@ -1205,7 +1205,6 @@ rbot <- rbot %>% left_join(a, by = "id") %>% mutate(nome_rede=nome_rede_tratado,
 
 alimento <- rbot %>% select(id, gasto_alimento) %>% mutate(gasto_num= as.numeric(gsub("[^0-9.]","",gasto_alimento)),
                                                            gasto_num = case_when(
-                                                             is.na(gasto_num)~NA,
                                                              gasto_num >= 10000~NA,
                                                              gasto_num == 0 | gasto_num == 5001~NA,
                                                              gasto_num >= 10 & gasto_num <=50~"Entre R$10,00 a R$50,00",
@@ -1215,12 +1214,94 @@ alimento <- rbot %>% select(id, gasto_alimento) %>% mutate(gasto_num= as.numeric
                                                              gasto_num >= 301 & gasto_num <=400~"Entre R$301,00 a R$400,00",
                                                              gasto_num >= 401 & gasto_num <=500~"Entre R$401,00 a R$500,00",
                                                              gasto_num > 500~"Acima de R$501,00",
+                                                             is.na(gasto_num)~NA,
+                                                             TRUE~NA),
+                                                           gasto_num = case_when(
                                                              gasto_alimento == "80 reais a 100 reais"~"Entre R$51,00 a R$100,00",
                                                              gasto_alimento == "180 á 200 reais"~"Entre R$101,00 a R$200,00",
-                                                             gasto_alimento%in%c("200 a 300 reais", "200 a 500 reais")~"Entre R$201,00 a R$300,00",
+                                                             gasto_alimento%in%c("200 á 300 reais", "200 a 300 reais", "200 a 500 reais", "200 á 500 reais")~"Entre R$201,00 a R$300,00",
                                                              gasto_alimento%in%c("300 á 500 reais", "300 á 400 reais", "250 á 400 reais")~"Entre R$301,00 a R$400,00",
                                                              gasto_alimento%in%c("400 a 500 reais", "400 á 500 reais", "400/500 reais", "400 á500 reais")~"Entre R$401,00 a R$500,00",
-                                                             gasto_alimento%in%c("500 á 600 reais", "600 á 800 reais", "500 á 800 reais", "500 á 1000 reais")~"Acima de R$501,00",
-                                                             TRUE~NA
-                                                           ))
+                                                             gasto_alimento%in%c("500 á 600 reais", "600 á 800 reais", "500 á 800 reais", "500 á 1000 reais", "500 á 1.000 reais", "Mil reais")~"Acima de R$501,00",
+                                                             str_detect(gasto_alimento, "Entre|Acima") == T ~ gasto_alimento,
+                                                             TRUE~gasto_num
+                                                           )) %>% 
+  mutate(gasto_alimento = NULL)
 
+
+rbot <- rbot %>% left_join(alimento, by = "id") %>% mutate(
+  gasto_alimento = gasto_num,
+  gasto_num = NULL
+)
+
+
+
+transporte <- rbot %>% select(id, gasto_transp) %>% mutate(gasto_num= as.numeric(gsub("[^0-9.]","",gasto_transp)),
+                                                           gasto_num = case_when(
+                                                             gasto_num >= 10000~NA,
+                                                             gasto_num == 0 | gasto_num == 5001~NA,
+                                                             gasto_num >= 10 & gasto_num <=50~"Entre R$10,00 a R$50,00",
+                                                             gasto_num >= 51 & gasto_num <=100~"Entre R$51,00 a R$100,00",
+                                                             gasto_num >= 101 & gasto_num <=200~"Entre R$101,00 a R$200,00",
+                                                             gasto_num >= 201 & gasto_num <=300~"Entre R$201,00 a R$300,00",
+                                                             gasto_num >= 301 & gasto_num <=400~"Entre R$301,00 a R$400,00",
+                                                             gasto_num >= 401 & gasto_num <=500~"Entre R$401,00 a R$500,00",
+                                                             gasto_num > 500~"Acima de R$501,00",
+                                                             is.na(gasto_num)~NA,
+                                                             TRUE~NA),
+                                                           gasto_num = case_when(
+                                                             #gasto_transp == "80 reais a 100 reais"~"Entre R$51,00 a R$100,00",
+                                                             gasto_transp %in% c("100 á 200 reais", "150 á 200 reais", "150 á 180 reais")~"Entre R$101,00 a R$200,00",
+                                                             gasto_transp%in%c("200 á 300 reais", "200/300 reais", "200 á250 reais")~"Entre R$201,00 a R$300,00",
+                                                             gasto_transp%in%c("300 á 400 reais")~"Entre R$301,00 a R$400,00",
+                                                             #gasto_transp%in%c("400 a 500 reais", "400 á 500 reais", "400/500 reais", "400 á500 reais")~"Entre R$401,00 a R$500,00",
+                                                             gasto_transp%in%c("500 a 600", "800 a 900 reais")~"Acima de R$501,00",
+                                                             str_detect(gasto_transp, "Entre|Acima") == T ~ gasto_transp,
+                                                             TRUE~gasto_num
+                                                           )) %>% 
+  mutate(gasto_transp = NULL)
+
+
+
+
+rbot <- rbot %>% left_join(transporte, by = "id") %>% mutate(
+  gasto_transp = gasto_num,
+  gasto_num = NULL
+)
+
+
+
+
+
+compras <- rbot %>% select(id, gasto_compras) %>% mutate(gasto_num= as.numeric(gsub("[^0-9.]","",gasto_compras)),
+                                                         gasto_num = case_when(
+                                                           gasto_num >= 10000~NA,
+                                                           gasto_num == 0 | gasto_num == 5001~NA,
+                                                           gasto_num >= 10 & gasto_num <=50~"Entre R$10,00 a R$50,00",
+                                                           gasto_num >= 51 & gasto_num <=100~"Entre R$51,00 a R$100,00",
+                                                           gasto_num >= 101 & gasto_num <=200~"Entre R$101,00 a R$200,00",
+                                                           gasto_num >= 201 & gasto_num <=300~"Entre R$201,00 a R$300,00",
+                                                           gasto_num >= 301 & gasto_num <=400~"Entre R$301,00 a R$400,00",
+                                                           gasto_num >= 401 & gasto_num <=500~"Entre R$401,00 a R$500,00",
+                                                           gasto_num > 500~"Acima de R$501,00",
+                                                           is.na(gasto_num)~NA,
+                                                           TRUE~NA),
+                                                         gasto_num = case_when(
+                                                           gasto_compras %in% c("80 á 100 reais", "100,00")~"Entre R$51,00 a R$100,00",
+                                                           gasto_compras %in% c("180 a 200 reais", "150 á160 reais", "120 á 450", "180 á 200 reais", "120 á150 reais", "200,00")~"Entre R$101,00 a R$200,00",
+                                                           gasto_compras%in%c("200 á 300 reais", "200/300 reais", "200 á250 reais")~"Entre R$201,00 a R$300,00",
+                                                           gasto_compras%in%c("300 á 400 reais")~"Entre R$301,00 a R$400,00",
+                                                           gasto_compras%in%c("400 a 500 reais", "400 á 500 reais", "400 á 800 reais", "400á 500 reais ou mais", "450 a 500")~"Entre R$401,00 a R$500,00",
+                                                           gasto_compras%in%c("500 á 600 reais", "500 a 800 reais", "500 á600 reais", "500 á 800 reais", "600 á 1000 reais", "900 á 1000 reais")~"Acima de R$501,00",
+                                                           str_detect(gasto_compras, "Entre|Acima") == T ~ gasto_compras,
+                                                           TRUE~gasto_num
+                                                         )) %>% 
+  mutate(gasto_compras = NULL)
+
+
+
+
+rbot <- rbot %>% left_join(compras, by = "id") %>% mutate(
+  gasto_compras = gasto_num,
+  gasto_num = NULL
+)

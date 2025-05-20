@@ -784,7 +784,7 @@ blumenau <- blumenau %>%
             avaliacao_divulg = Divulgação,
             avaliacao_comida = `Alimentos e bebidas (qualidade)`,
             avaliacao_preco = `Preços praticados no evento`,
-            avaliacao_produtos = `Produtos e serviços culturais R$ `,
+            avaliacao_produtos = `Artesanato e/ou Produtos comercializados `,
             avaliacao_prog = `Programação cultural `,
             avaliacao_representacao = `Representatividade da cultura local`,
             avaliacao_diversidade = `Diversidade das atividades culturais`,
@@ -1305,3 +1305,88 @@ rbot <- rbot %>% left_join(compras, by = "id") %>% mutate(
   gasto_compras = gasto_num,
   gasto_num = NULL
 )
+
+
+cultura <- rbot %>% select(id, gasto_cultura) %>% mutate(gasto_num= as.numeric(gsub("[^0-9.]","",gasto_cultura)),
+                                                         gasto_num = case_when(
+                                                           gasto_num >= 10000~NA,
+                                                           gasto_num == 0 | gasto_num == 5001 | gasto_num == 8060 | gasto_num == 5060 | gasto_num == 8090~NA,
+                                                           gasto_num >= 10 & gasto_num <=50~"Entre R$10,00 a R$50,00",
+                                                           gasto_num >= 51 & gasto_num <=100~"Entre R$51,00 a R$100,00",
+                                                           gasto_num >= 101 & gasto_num <=200~"Entre R$101,00 a R$200,00",
+                                                           gasto_num >= 201 & gasto_num <=300~"Entre R$201,00 a R$300,00",
+                                                           gasto_num >= 301 & gasto_num <=400~"Entre R$301,00 a R$400,00",
+                                                           gasto_num >= 401 & gasto_num <=500~"Entre R$401,00 a R$500,00",
+                                                           gasto_num > 500~"Acima de R$501,00",
+                                                           is.na(gasto_num)~NA,
+                                                           TRUE~NA),
+                                                         gasto_num = case_when(
+                                                           gasto_cultura %in% c("80 á 100 reais", "100,00","50 á 60 reais","80 á90 reais")~"Entre R$51,00 a R$100,00",
+                                                           gasto_cultura %in% c("180 a 200 reais", "150 á160 reais", "120 á 450", "180 á 200 reais","100 á120 reais", "200 120 reais reais","120 á150 reais", "200,00","100á 150 reais","140 á 150 reais","100 á 150 reais","100 á 200 reais","100 á150 reais","100/200 reais")~"Entre R$101,00 a R$200,00",
+                                                           gasto_cultura%in%c("200 á 300 reais", "200/300 reais", "200 á250 reais")~"Entre R$201,00 a R$300,00",
+                                                           gasto_cultura%in%c("300 á 400 reais","300 á 400 reais")~"Entre R$301,00 a R$400,00",
+                                                           gasto_cultura%in%c("400 a 500 reais", "400 á 500 reais", "400 á 800 reais", "400á 500 reais ou mais", "450 a 500")~"Entre R$401,00 a R$500,00",
+                                                           gasto_cultura%in%c("500 á 600 reais", "500 a 800 reais", "500 á600 reais", "500 á 800 reais", "600 á 1000 reais", "900 á 1000 reais","800 á 1000 reais")~"Acima de R$501,00",
+                                                           str_detect(gasto_cultura, "Entre|Acima") == T ~ gasto_cultura,
+                                                           TRUE~gasto_num
+                                                         )) %>% 
+  mutate(gasto_cultura = NULL)
+
+
+
+
+rbot <- rbot %>% left_join(cultura, by = "id") %>% mutate(
+  gasto_cultura = gasto_num,
+  gasto_num = NULL
+)
+
+# Criando o vetor 1 com as entradas fornecidas
+vetor1 <- c(NA, "Eu e meu esposo", "Somente eu", "4.0", "Só eu", "1.0", "Eu minha esposa e meus 2 filhos",
+            "2.0", "3.0", "5.0", "Uma", "1 pessoa", "Eu minha esposa e meu filho", 
+            "Eu meu esposo e minha filha", "2 pessoas", "0.0", "Eu e meu namorado", "6 pessoas", "3 pessoas",
+            "Só eu mesmo.", "Eu sozinha", "6.0", "Eu e minha irmã", "Eu e minha esposa", "6 amigos",
+            "Eu e minha mãe", "Só eu mesmo", "Eu e a esposa", "Eu e meu filho", "Nenhuma", "Eu minha esposa e meus 3 filhos",
+            "4 pessoas", "5 pessoas", "8 pessoas", "10 pessoas", "Eu e meu filhos", "Eu e meus filhos",
+            "Eu minha mãe e meus irmãos", "Eu minha esposa e meus filhos", "Eu minha esposa e minhas filhas",
+            "Só eu pois sou viúvo", "Vim sozinho", "Só e minha esposa", "Eu minha esposa e minha filha",
+            "Eu e minha namorada", "7.0", "Eu vim sozinho", "Eu vim sozinha", "Eu minha esposa", "Vim sozinha",
+            "Não sei", "2 duas", "Não sabe responder", "Nao sei", "Apenas eu", "Ninguém", "Três amigos",
+            "Só 1", "1 pessoa só", "300.0", "So uma", "Só uma pessoa mesmo", "So uma pessoa mesmo",
+            "Não quis responder", "Uma pessoa só", "02", "Nr", "Não quis informar", "60.0", "00",
+            "Vinhemos em um grupo grande, 15 pessoas", "33.0", "20.0", "15 pessoas", "400.0",
+            "Duas", "200.0", "Está sozinho", "Eu", "Não respondeu", "01", "11.0", "100.0",
+            "Não responderam", "4", "1", "2", "3", "5", "6", "10", "7", "9", "8", "20", "12",
+            "14", "Acima de 5 pessoas", "2 a 5 pessoas", "Acima de 10 pessoas (caravana)", "Não sabe",
+            "40", "46", "42", "48", "50", "30", "8.0", "-", "0", "Eu e minha filha", "Não teve", "Eu e esposo")
+
+vetor2 <- c(NA, 2, 1, 4, 1, 1, 4, 2, 3, 5, 1, 1, 3, 3, 2, 0, 2, 6, 3, 1, 1, 6, 2, 2, 6, 2, 1, 2, 2, 0, 5, 4, 5, 8, 10, 2, 2, 4, 4, 4, 1, 1, 2, 3, 2, 7, 1, 1, 2, 1, NA, 2, NA, NA, 1, 0, 3, 1, 1, 300, 1, 1, 1, NA, 1, 2, NA, NA, 60, 0, 15, 33, 20, 15, 400, 2, 200, 1, 1, NA, 1, 11, 100, NA, 4, 1, 2, 3, 5, 6, 10, 7, 9, 8, 20, 12, 14, 5, 5, 10, NA, 40, 46, 42, 48, 50, 30, 8, NA, 0, 2, NA, 2)
+
+df <- data.frame(qtd_gastos = vetor1, qtd_gasto_tratado = vetor2)
+
+rbot <- rbot %>% left_join(df, by = "qtd_gastos") %>% mutate(qtd_gastos= qtd_gasto_tratado, qtd_gasto_tratado = NULL)
+
+
+df <- read_xlsx("df.xlsx")
+
+rbot <- rbot %>% left_join(df %>% unique(), by = "dia_evento") %>% mutate(dia_evento = dia_evento_tratado, dia_evento_tratado = NULL)
+
+
+rbot <- rbot %>% mutate(avaliacao_local = as.numeric(avaliacao_local)) %>% mutate(avaliacao_local=ifelse(avaliacao_local == 11,NA,avaliacao_local))
+rbot <- rbot %>% mutate(avaliacao_infra = as.numeric(avaliacao_infra)) %>% mutate(avaliacao_infra=ifelse(avaliacao_infra == 11,NA,avaliacao_infra))
+rbot <- rbot %>% mutate(avaliacao_org = as.numeric(avaliacao_org)) %>% mutate(avaliacao_org=ifelse(avaliacao_org == 11,NA,avaliacao_org))
+rbot <- rbot %>% mutate(avaliacao_divulg = as.numeric(avaliacao_divulg)) %>% mutate(avaliacao_divulg=ifelse(avaliacao_divulg == 11,NA,avaliacao_divulg))
+rbot <- rbot %>% mutate(avaliacao_comida = as.numeric(avaliacao_comida)) %>% mutate(avaliacao_comida=ifelse(avaliacao_comida == 11,NA,avaliacao_comida))
+rbot <- rbot %>% mutate(avaliacao_preco = as.numeric(avaliacao_preco)) %>% mutate(avaliacao_preco=ifelse(avaliacao_preco == 11,NA,avaliacao_preco))
+rbot <- rbot %>% mutate(avaliacao_produtos = as.numeric(avaliacao_produtos)) %>% mutate(avaliacao_produtos=ifelse(avaliacao_produtos == 11,NA,avaliacao_produtos))
+rbot <- rbot %>% mutate(avaliacao_prog = as.numeric(avaliacao_prog)) %>% mutate(avaliacao_prog=ifelse(avaliacao_prog == 11,NA,avaliacao_prog))
+rbot <- rbot %>% mutate(avaliacao_representacao = as.numeric(avaliacao_representacao)) %>% mutate(avaliacao_representacao=ifelse(avaliacao_representacao == 11,NA,avaliacao_representacao))
+rbot <- rbot %>% mutate(avaliacao_diversidade = as.numeric(avaliacao_diversidade)) %>% mutate(avaliacao_diversidade=ifelse(avaliacao_diversidade == 11,NA,avaliacao_diversidade))
+rbot <- rbot %>% mutate(avaliacao_aproximacao = as.numeric(avaliacao_aproximacao)) %>% mutate(avaliacao_aproximacao=ifelse(avaliacao_aproximacao == 11,NA,avaliacao_aproximacao))
+rbot <- rbot %>% mutate(avaliacao_acolhimento = as.numeric(avaliacao_acolhimento)) %>% mutate(avaliacao_acolhimento=ifelse(avaliacao_acolhimento == 11,NA,avaliacao_acolhimento))
+rbot <- rbot %>% mutate(avaliacao_seguranca = as.numeric(avaliacao_seguranca)) %>% mutate(avaliacao_seguranca=ifelse(avaliacao_seguranca == 11,NA,avaliacao_seguranca))
+rbot <- rbot %>% mutate(avaliacao_acessibilidade = as.numeric(avaliacao_acessibilidade)) %>% mutate(avaliacao_acessibilidade=ifelse(avaliacao_acessibilidade == 11,NA,avaliacao_acessibilidade))
+rbot <- rbot %>% mutate(avaliacao_limpeza = as.numeric(avaliacao_limpeza)) %>% mutate(avaliacao_limpeza=ifelse(avaliacao_limpeza == 11,NA,avaliacao_limpeza))
+rbot <- rbot %>% mutate(avaliacao_geral = as.numeric(avaliacao_geral)) %>% mutate(avaliacao_geral=ifelse(avaliacao_geral == 11,NA,avaliacao_geral))
+
+
+

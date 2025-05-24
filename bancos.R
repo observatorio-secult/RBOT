@@ -1388,5 +1388,48 @@ rbot <- rbot %>% mutate(avaliacao_acessibilidade = as.numeric(avaliacao_acessibi
 rbot <- rbot %>% mutate(avaliacao_limpeza = as.numeric(avaliacao_limpeza)) %>% mutate(avaliacao_limpeza=ifelse(avaliacao_limpeza == 11,NA,avaliacao_limpeza))
 rbot <- rbot %>% mutate(avaliacao_geral = as.numeric(avaliacao_geral)) %>% mutate(avaliacao_geral=ifelse(avaliacao_geral == 11,NA,avaliacao_geral))
 
+rbot <- rbot %>% mutate(volta = case_when(
+  volta == "Sim."~"Sim",
+  volta == "Não."~"Não",
+  volta == "Não responderam"~NA,
+  TRUE~volta
+))
 
+rbot <- rbot %>% mutate(sexo = case_when(
+  sexo == "Masculino"~"Homem",
+  sexo == "Feminino"~"Mulher",
+  sexo%in%c("Prefiro não dizer","Gênero fluido","Não-Binário")~"Outro",
+  sexo%in%c("Não responderam","NS/NR")~NA,
+  TRUE~sexo
+))
 
+rbot <- rbot %>% mutate(lgbt = case_when(
+  lgbt == "Não."~"Não",
+  lgbt == "Sim."~"Sim",
+  lgbt%in%c("Não responderam","NR/NS")~NA,
+  TRUE~lgbt
+))
+
+rbot <- rbot %>% mutate(raca = case_when(
+  raca%in%c("Prefiro não declarar","Não declarar","Não responderam")~NA,
+  TRUE~raca
+))
+
+rbot <- rbot %>% mutate(renda = case_when(
+  renda%in%c("Até 1 SM (R$ 1.412,00)","Até 1 SM (R$1.420,00)","Até 1 SM (R$ 1.420,00)")~"Até 1 SM",
+  renda%in%c("Entre 1 SM e 3 SM (R$ 1.412,01 a R$4.236,00)","Entre 1 SM e 3 SM (R$ 1.412,01 a R$ 4.236,00)","Entre 1SM e 3SM (R$1.420,00 a R$4.260,00)","Entre 1 SM e 3 SM (R$1.420,01 a R$4.260,00)","Entre 1SM e 3SM (R$1.420,00 a R$4.260,00)","Entre 1 SM e 3 SM (R$ 1.420,01 a R$ 4.260,00)")~"Entre 1 SM e 3 SM",
+  renda%in%c("Entre 3 SM e 5 SM (R$4.236 ,01 a R$7.060,00)","Entre 3 SM e 5 SM (R$ 4.260,01 a R$ 7.100,00)","Entre 3 SM e 5 SM (R$ 4.236,01 a R$ 7.060,00)","Entre 3SM e 5SM (R$4.260,00 a R$7.100,00)","Entre 3 SM e 5 SM (R$4.260,01 a R$7.100,00)")~"Entre 3 SM e 5 SM",
+  renda%in%c("Entre 5 SM e 7 SM (R$7.060,01 a R$ 9.884,00)","Entre 5 SM e 7 SM (R$ 7.100,01 a R$ 9.940 ,00)","Entre 5 SM e 7 SM (R$ 7.060,01 a R$ 9.884,00)","Entre 5SM e7SM (R$7.100,00 a R$9.940,00)","Entre 5 SM e 7 SM ( R$7.100,01 a R$9.940,00)")~"Entre 5 SM e 7 SM",
+  renda%in%c("Entre 7 SM e 10 SM (R$9.884,01 a R$14.120,00)","Entre 7 SM e 10 SM (R$ 9.940,01 a R$ 14.200,00)","Entre 7 SM e 10 SM (R$ 14.120,01)","Entre 7SM e 10SM (R$9.940,01 a R$ 14.200,00)","Entre 7 SM e 10 SM ( R$9.940,00 a R$14.200,00)")~"Entre 7 SM e 10 SM",
+  renda%in%c("Acima de 10 SM (R$ 14.120,01)","Acima de 10 SM (R$ 14.200,01)","Acima de 10SM (R$ 14.200,01)","Acima de 10 SM (R$14.200,01)")~"Acima de 10 SM",
+  renda%in%c("NS_NR","Não respondeu","Não responderam","Prefiro não responder")~NA,
+  TRUE~renda
+))
+
+rbot <- rbot %>% mutate(escolaridade = case_when(
+  escolaridade%in%c("Médio completo","Ensino médio completo")~"Ensino Médio Completo",
+  escolaridade == "Superior completo"~"Ensino Superior Completo",
+  escolaridade == ""
+  
+  
+))
